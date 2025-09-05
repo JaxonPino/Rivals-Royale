@@ -4,23 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rivals Royale</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn-tailwindcss.vercel.app/"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             overflow: hidden;
         }
-        .tab-button.active {
+        .tab-button.active, .sub-tab-button.active {
             background-color: #4f46e5;
             color: white;
         }
         .card {
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            position: relative; /* Needed for the count badge */
         }
         .card:hover {
             transform: translateY(-5px);
             box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .card-count-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background-color: #f59e0b;
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem;
+            padding: 0.1rem 0.5rem;
+            border-radius: 9999px;
+            border: 2px solid white;
+        }
+        .evolved-glow {
+            box-shadow: 0 0 15px 5px #a855f7, inset 0 0 10px 2px #c084fc;
         }
         .rarity-common { border-color: #9ca3af; }
         .rarity-rare { border-color: #3b82f6; }
@@ -38,70 +54,72 @@
             transition: width 0.5s ease-in-out;
         }
         
-        .modal-enter {
-            animation: fadeIn 0.3s ease-out forwards;
-        }
-
-        .modal-leave {
-            animation: fadeOut 0.3s ease-in forwards;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        @keyframes fadeOut {
-            from { opacity: 1; transform: scale(1); }
-            to { opacity: 0; transform: scale(0.9); }
-        }
+        .modal-enter { animation: fadeIn 0.3s ease-out forwards; }
+        .modal-leave { animation: fadeOut 0.3s ease-in forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
         
-        .shake {
-            animation: shake 0.5s;
-        }
-
+        .shake { animation: shake 0.5s; }
         @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
+            0%, 100% { transform: translateX(0); } 10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); } 20%, 40%, 60%, 80% { transform: translateX(5px); }
         }
         .damage-popup {
-            position: absolute;
-            font-size: 2.5rem;
-            font-weight: bold;
-            color: #ef4444;
+            position: absolute; font-size: 2.5rem; font-weight: bold; color: #ef4444;
             text-shadow: -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
-            animation: floatUp 1s ease-out forwards;
-            pointer-events: none;
-            z-index: 10;
+            animation: floatUp 1.5s ease-out forwards; pointer-events: none; z-index: 10;
         }
-        @keyframes floatUp {
-            from { opacity: 1; transform: translateY(0) scale(1); }
-            to { opacity: 0; transform: translateY(-60px) scale(1.5); }
-        }
-        .impact-flash {
-            animation: flash 0.3s ease-out;
-        }
-        @keyframes flash {
-            0%, 100% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); }
-            50% { box-shadow: 0 0 30px 15px rgba(255, 255, 255, 0.7); }
-        }
-        .card-attack-animation {
-            animation: cardAttack 0.5s ease-in-out forwards;
-        }
+        @keyframes floatUp { from { opacity: 1; transform: translateY(0) scale(1); } to { opacity: 0; transform: translateY(-60px) scale(1.5); } }
+        .impact-flash { animation: flash 0.3s ease-out; }
+        @keyframes flash { 0%, 100% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); } 50% { box-shadow: 0 0 30px 15px rgba(255, 255, 255, 0.7); } }
+        .card-attack-animation { animation: cardAttack 0.5s ease-in-out forwards; }
         @keyframes cardAttack {
-            0% { transform: translateY(0) scale(1); opacity: 1; }
-            50% { transform: translateY(-100px) scale(1.2); opacity: 1; }
-            100% { transform: translateY(-150px) scale(0.5); opacity: 0; }
+            0% { transform: translateY(0) scale(1); opacity: 1; } 50% { transform: translateY(-100px) scale(1.2); opacity: 1; } 100% { transform: translateY(-150px) scale(0.5); opacity: 0; }
         }
-         /* For webkit-based browsers (Chrome, Safari) */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Attack Animations */
+        .animation-slash {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(to top left, transparent 48%, white 50%, transparent 52%);
+            animation: slash-anim 0.4s ease-out forwards;
         }
-        /* For IE, Edge, and Firefox */
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+        @keyframes slash-anim {
+            0% { transform: translate(-100px, 100px) rotate(60deg) scale(0.8); opacity: 1; }
+            100% { transform: translate(100px, -100px) rotate(60deg) scale(1.2); opacity: 0; }
+        }
+
+        .animation-blast {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(192,132,252,1) 100%);
+            box-shadow: 0 0 20px 10px rgba(192,132,252,0.7);
+            animation: blast-anim 0.5s ease-out forwards;
+        }
+        @keyframes blast-anim {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(5); opacity: 0; }
+        }
+
+        .animation-impact {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background-image: 
+                radial-gradient(yellow 30%, transparent 31%),
+                radial-gradient(yellow 30%, transparent 31%);
+            background-size: 10px 10px, 10px 10px;
+            background-position: 0 0, 50px 50px;
+            border-radius: 50%;
+            animation: impact-anim 0.3s ease-in-out forwards;
+        }
+        @keyframes impact-anim {
+            0% { transform: scale(0.5) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
         }
     </style>
 </head>
@@ -114,15 +132,13 @@
         <header class="flex justify-between items-center bg-gray-800 p-4 rounded-lg shadow-lg mb-4">
             <div>
                 <h1 class="text-2xl font-bold text-indigo-400">Rivals Royale</h1>
-                <div class="flex items-center space-x-2 text-sm">
-                    <span>Player Level: <span id="player-level">1</span></span>
-                    <div class="w-48 bg-gray-700 rounded-full h-2.5">
-                        <div id="xp-bar" class="bg-indigo-500 h-2.5 rounded-full progress-bar-fill" style="width: 0%"></div>
-                    </div>
-                    <span id="xp-text">0/100</span>
-                </div>
+                <div id="player-stats" class="flex items-center space-x-2 text-lg font-semibold"></div>
             </div>
             <div class="flex items-center space-x-6">
+                 <div class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.293 2.293a1 1 0 010 1.414L11 12l4.293 4.293a1 1 0 01-1.414 1.414L12 13.414l-2.293 2.293a1 1 0 01-1.414 0L6 13.414 3.707 11.121a1 1 0 010-1.414L6 7.414l2.293-2.293a1 1 0 011.414 0L12 7.414l2.293-2.293a1 1 0 011.414 0L18 7.414l2.293 2.293a1 1 0 010 1.414L18 13.414l-2.293 2.293a1 1 0 01-1.414 0L12 13.414l-2.293 2.293a1 1 0 01-1.414-1.414L11 12 8.707 9.707a1 1 0 010-1.414L11 6l2.293-2.293a1 1 0 011.414 0z"></path></svg>
+                    <span id="shard-currency" class="text-xl font-semibold">0</span>
+                </div>
                 <div class="flex items-center space-x-2">
                     <span class="text-yellow-400 text-2xl">¥</span>
                     <span id="yen-currency" class="text-xl font-semibold">500</span>
@@ -135,8 +151,9 @@
         </header>
 
         <!-- Navigation Tabs -->
-        <nav class="flex space-x-2 mb-4">
+        <nav id="main-nav" class="flex space-x-2 mb-4">
             <button onclick="showTab('battle')" class="tab-button flex-1 py-3 px-4 bg-gray-700 rounded-lg font-semibold transition hover:bg-gray-600 active">Battle</button>
+            <button onclick="showTab('pass')" class="tab-button flex-1 py-3 px-4 bg-gray-700 rounded-lg font-semibold transition hover:bg-gray-600">Pass</button>
             <button onclick="showTab('collection')" class="tab-button flex-1 py-3 px-4 bg-gray-700 rounded-lg font-semibold transition hover:bg-gray-600">Collection</button>
             <button onclick="showTab('shop')" class="tab-button flex-1 py-3 px-4 bg-gray-700 rounded-lg font-semibold transition hover:bg-gray-600">Shop</button>
         </nav>
@@ -144,40 +161,41 @@
         <!-- Main Content Area -->
         <main class="flex-1 bg-gray-800 rounded-lg shadow-lg p-6 overflow-y-auto no-scrollbar">
             <!-- Battle Tab -->
-            <div id="battle-tab" class="tab-content">
-                <div id="battle-arena" class="hidden h-full flex flex-col items-center justify-between">
-                    <!-- Opponent Info -->
-                    <div class="w-full">
-                         <div id="opponent-info" class="text-center mb-4 relative">
-                            <h2 id="opponent-name" class="text-2xl font-bold">Training Dummy</h2>
-                            <div class="w-full max-w-lg mx-auto bg-gray-700 rounded-full h-6">
-                                <div id="opponent-hp-bar" class="bg-red-600 h-6 rounded-full progress-bar-fill text-center font-bold" style="width: 100%">100%</div>
-                            </div>
+            <div id="battle-tab" class="tab-content h-full">
+                 <div id="battle-arena" class="hidden h-full flex flex-col relative overflow-hidden">
+                    <!-- Animation Overlay -->
+                    <div id="animation-overlay" class="absolute inset-0 pointer-events-none z-20 flex justify-center items-center"></div>
+                    
+                    <div id="turn-timer-display" class="absolute top-0 left-1/2 -translate-x-1/2 text-4xl font-bold text-white bg-black/50 px-4 py-2 rounded-lg hidden">5</div>
+
+                    <!-- Opponent Area -->
+                    <div id="opponent-area" class="w-full flex-1 flex flex-col justify-end items-center pb-4 md:pb-8">
+                         <div id="opponent-info" class="text-center mb-4 relative w-full max-w-sm md:max-w-md">
+                            <h2 id="opponent-name" class="text-xl md:text-2xl font-bold">Training Dummy</h2>
+                            <div class="w-full bg-gray-700 rounded-full h-6"><div id="opponent-hp-bar" class="bg-red-600 h-6 rounded-full progress-bar-fill text-center font-bold" style="width: 100%">100%</div></div>
                         </div>
                     </div>
+                    
+                    <!-- Center Area -->
+                    <div id="center-area" class="py-2">
+                        <div id="turn-indicator" class="text-xl md:text-2xl font-bold bg-gray-900 px-4 py-2 rounded-md">Your Turn</div>
+                    </div>
 
-                    <!-- Turn Info -->
-                    <div id="turn-indicator" class="text-2xl font-bold my-4 bg-gray-900 px-4 py-2 rounded-md">Your Turn</div>
-                   
-                    <!-- Player Info -->
-                    <div class="w-full">
-                        <div id="player-battle-info" class="text-center mt-4 relative">
-                            <div class="w-full max-w-lg mx-auto bg-gray-700 rounded-full h-6">
-                                <div id="player-hp-bar" class="bg-green-600 h-6 rounded-full progress-bar-fill text-center font-bold" style="width: 100%">100%</div>
-                            </div>
-                            <div class="w-full max-w-lg mx-auto bg-gray-700 rounded-full h-6 mt-2">
-                                <div id="player-stamina-bar" class="bg-blue-500 h-6 rounded-full progress-bar-fill text-center font-bold" style="width: 100%">100%</div>
-                            </div>
-                             <h2 class="text-2xl font-bold mt-2">You</h2>
+                    <!-- Player Area -->
+                    <div id="player-area" class="w-full flex-1 flex flex-col justify-start items-center pt-4 md:pt-8">
+                        <div id="player-battle-info" class="text-center mt-4 relative w-full max-w-sm md:max-w-md">
+                            <div class="w-full bg-gray-700 rounded-full h-6"><div id="player-hp-bar" class="bg-green-600 h-6 rounded-full progress-bar-fill text-center font-bold" style="width: 100%">100%</div></div>
+                            <div class="w-full bg-gray-700 rounded-full h-6 mt-2"><div id="player-stamina-bar" class="bg-blue-500 h-6 rounded-full progress-bar-fill text-center font-bold" style="width: 0%">0%</div></div>
+                            <h2 class="text-xl md:text-2xl font-bold mt-2">You</h2>
                         </div>
+                         <div id="player-hand" class="flex justify-center items-center space-x-2 md:space-x-4 mt-6"></div>
+                    </div>
 
-                        <!-- Player Hand -->
-                        <div id="player-hand" class="flex justify-center items-center space-x-4 mt-6 h-48">
-                            <!-- Ability cards will be dynamically inserted here -->
-                        </div>
+                    <div class="absolute bottom-4 right-4 text-center hidden md:block">
+                        <p class="font-bold text-sm mb-1 text-gray-400">Next Up</p>
+                        <div id="next-card-preview" class="w-20 h-28 lg:w-24 lg:h-36 bg-gray-900/80 rounded-lg border-2 border-dashed border-gray-600 flex items-center justify-center"></div>
                     </div>
                 </div>
-
                 <div id="battle-lobby" class="flex flex-col items-center justify-center h-full text-center">
                     <h2 class="text-4xl font-bold mb-4">Prepare for Battle!</h2>
                     <p class="text-gray-400 mb-8">Assemble your deck in the Collection tab and test your might.</p>
@@ -185,22 +203,49 @@
                 </div>
             </div>
 
+            <!-- Battle Pass Tab -->
+            <div id="pass-tab" class="tab-content hidden">
+                 <h2 class="text-3xl font-bold mb-4 text-center text-yellow-300">Battle Pass</h2>
+                 <div class="mb-6 bg-gray-900 p-4 rounded-lg">
+                    <div class="flex justify-between items-center mb-1">
+                        <span id="pass-level-display" class="font-bold">Level 1</span>
+                        <span id="pass-xp-display" class="text-sm text-gray-400">0 / 10 XP</span>
+                    </div>
+                    <div class="w-full bg-gray-700 rounded-full h-4"><div id="pass-xp-bar" class="bg-yellow-400 h-4 rounded-full" style="width: 0%"></div></div>
+                 </div>
+                 <div id="battle-pass-rewards" class="space-y-2 overflow-y-auto no-scrollbar" style="max-height: 60vh;"></div>
+            </div>
+
             <!-- Collection Tab -->
             <div id="collection-tab" class="tab-content hidden">
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-                    <!-- Equipped Deck -->
-                    <div class="lg:col-span-5 bg-gray-900 p-4 rounded-lg">
-                        <h3 class="text-xl font-bold mb-4 text-center border-b-2 border-indigo-500 pb-2">Equipped Deck</h3>
-                        <div id="equipped-deck-slots" class="grid grid-cols-4 gap-4">
-                            <!-- 8 slots for equipped cards -->
+                <div class="flex space-x-2 mb-4 border-b-2 border-gray-700">
+                    <button onclick="showCollectionSubTab('abilities')" class="sub-tab-button flex-1 pb-2 font-semibold transition hover:bg-gray-700/50 active">Abilities</button>
+                    <button onclick="showCollectionSubTab('character')" class="sub-tab-button flex-1 pb-2 font-semibold transition hover:bg-gray-700/50">Character</button>
+                    <button onclick="showCollectionSubTab('evolution')" class="sub-tab-button flex-1 pb-2 font-semibold transition hover:bg-gray-700/50">Evolution</button>
+                </div>
+
+                <div id="abilities-sub-tab" class="collection-sub-content">
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+                        <div class="lg:col-span-5 bg-gray-900 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4 text-center border-b-2 border-indigo-500 pb-2">Equipped Deck</h3>
+                            <div id="equipped-deck-slots" class="grid grid-cols-4 gap-4"></div>
+                        </div>
+                        <div class="lg:col-span-7 bg-gray-900 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4 text-center border-b-2 border-indigo-500 pb-2">My Abilities</h3>
+                            <div id="owned-abilities-list" class="space-y-3 overflow-y-auto no-scrollbar" style="max-height: 65vh;"></div>
                         </div>
                     </div>
-                    <!-- Owned Abilities -->
-                    <div class="lg:col-span-7 bg-gray-900 p-4 rounded-lg">
-                        <h3 class="text-xl font-bold mb-4 text-center border-b-2 border-indigo-500 pb-2">My Abilities</h3>
-                        <div id="owned-abilities-list" class="space-y-3 overflow-y-auto no-scrollbar" style="max-height: 65vh;">
-                            <!-- List of owned abilities -->
-                        </div>
+                </div>
+
+                 <div id="character-sub-tab" class="collection-sub-content hidden">
+                    <div id="character-stats-container" class="flex flex-col items-center">
+                        <!-- Character Stat Card UI will be generated here -->
+                    </div>
+                </div>
+
+                <div id="evolution-sub-tab" class="collection-sub-content hidden">
+                    <div id="evolution-container" class="flex flex-col items-center">
+                        <!-- Evolution UI will be generated here -->
                     </div>
                 </div>
             </div>
@@ -208,43 +253,25 @@
             <!-- Shop Tab -->
             <div id="shop-tab" class="tab-content hidden">
                  <div class="flex flex-col items-center h-full">
-                    <h2 class="text-4xl font-bold mb-2">Ability Shop</h2>
-                    <p class="text-gray-400 mb-8">Use your gems to acquire new and powerful abilities.</p>
+                    <h2 class="text-4xl font-bold mb-2">Chest Shop</h2>
+                    <p class="text-gray-400 mb-8">Use your gems to acquire powerful chests.</p>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
-                        <!-- Single Summon -->
-                        <div class="bg-gray-900 p-6 rounded-lg shadow-2xl text-center flex flex-col justify-between">
-                            <div>
-                                <h3 class="text-2xl font-semibold mb-2">Single Summon</h3>
-                                <p class="text-gray-400 mb-4 h-12">A chance for any ability.</p>
-                            </div>
-                            <button onclick="buyFromShop('single')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition transform hover:scale-105 w-full flex items-center justify-center space-x-2 mt-4">
-                                <span>Buy</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                <span>5</span>
+                        <div class="bg-gray-900 p-6 rounded-lg shadow-2xl text-center flex flex-col justify-between border-2 border-gray-500">
+                            <div><h3 class="text-2xl font-semibold mb-2 text-gray-400">Common Chest</h3><p class="text-gray-400 mb-4 h-12">Contains Yen and 2 Ability Stacks.</p></div>
+                            <button onclick="buyChest('common')" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition transform hover:scale-105 w-full flex items-center justify-center space-x-2 mt-4">
+                                <span>Buy</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg><span>10</span>
                             </button>
                         </div>
-                        <!-- Triple Summon -->
-                        <div class="bg-gray-900 p-6 rounded-lg shadow-2xl text-center flex flex-col justify-between">
-                            <div>
-                                <h3 class="text-2xl font-semibold mb-2">Triple Summon</h3>
-                                <p class="text-gray-400 mb-4 h-12">Get three abilities at once for a discount!</p>
-                            </div>
-                            <button onclick="buyFromShop('triple')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition transform hover:scale-105 w-full flex items-center justify-center space-x-2 mt-4">
-                                <span>Buy</span>
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                <span>14</span>
+                        <div class="bg-gray-900 p-6 rounded-lg shadow-2xl text-center flex flex-col justify-between border-2 border-purple-500">
+                            <div><h3 class="text-2xl font-semibold mb-2 text-purple-400">Epic Chest</h3><p class="text-gray-400 mb-4 h-12">Contains more Yen, 4 Ability Stacks and guarantees at least one Rare.</p></div>
+                            <button onclick="buyChest('epic')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition transform hover:scale-105 w-full flex items-center justify-center space-x-2 mt-4">
+                                <span>Buy</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg><span>25</span>
                             </button>
                         </div>
-                        <!-- Guaranteed Rare Summon -->
                         <div class="bg-gray-900 p-6 rounded-lg shadow-2xl text-center flex flex-col justify-between border-2 border-orange-500">
-                            <div>
-                                <h3 class="text-2xl font-semibold mb-2 text-orange-400">Rare Summon</h3>
-                                <p class="text-gray-400 mb-4 h-12">Guaranteed to be a Rare ability or better.</p>
-                            </div>
-                            <button onclick="buyFromShop('rare_plus')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition transform hover:scale-105 w-full flex items-center justify-center space-x-2 mt-4">
-                                <span>Buy</span>
-                               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-                                <span>20</span>
+                            <div><h3 class="text-2xl font-semibold mb-2 text-orange-400">Legendary Chest</h3><p class="text-gray-400 mb-4 h-12">Contains lots of Yen, 7 Ability Stacks and guarantees at least one Epic.</p></div>
+                            <button onclick="buyChest('legendary')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition transform hover:scale-105 w-full flex items-center justify-center space-x-2 mt-4">
+                                <span>Buy</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg><span>50</span>
                             </button>
                         </div>
                     </div>
@@ -255,589 +282,609 @@
 
     <!-- Modal Container -->
     <div id="modal-container" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center hidden z-50 p-4">
-        <!-- Battle Result Modal -->
         <div id="battle-result-modal" class="modal-content hidden bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-sm w-full">
-            <h2 id="battle-result-title" class="text-3xl font-bold mb-4"></h2>
-            <p id="battle-result-rewards" class="text-lg mb-6"></p>
-            <button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">Continue</button>
+            <h2 id="battle-result-title" class="text-3xl font-bold mb-4"></h2><p id="battle-result-rewards" class="text-lg mb-6"></p><button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">Continue</button>
         </div>
-        <!-- Shop Result Modal -->
-        <div id="shop-result-modal" class="modal-content hidden bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-lg w-full">
-            <h2 id="shop-result-title" class="text-3xl font-bold mb-4">You acquired new abilities!</h2>
-            <div id="shop-result-cards" class="mb-6 flex justify-center gap-4 flex-wrap"></div>
-            <button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">Awesome!</button>
+        <div id="shop-result-modal" class="modal-content hidden bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-2xl w-full">
+            <h2 id="shop-result-title" class="text-3xl font-bold mb-4">Chest Rewards</h2><div id="shop-result-rewards" class="mb-6 flex flex-col items-center gap-4"></div><button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg">Awesome!</button>
         </div>
-        <!-- Upgrade Modal -->
         <div id="upgrade-modal" class="modal-content hidden bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-sm w-full">
-            <h2 class="text-3xl font-bold mb-4">Upgrade Ability</h2>
-            <p id="upgrade-info" class="mb-4"></p>
-            <p id="upgrade-cost" class="mb-6 font-semibold"></p>
-            <div class="flex justify-center space-x-4">
-                <button id="confirm-upgrade-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">Upgrade</button>
-                <button onclick="closeModal()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Cancel</button>
-            </div>
+            <h2 id="upgrade-title" class="text-3xl font-bold mb-4">Upgrade</h2><p id="upgrade-info" class="mb-4"></p><p id="upgrade-cost" class="mb-6 font-semibold"></p>
+            <div class="flex justify-center space-x-4"><button id="confirm-upgrade-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg">Upgrade</button><button onclick="closeModal()" class="bg-red-600 hover:red-bg-700 text-white font-bold py-2 px-6 rounded-lg">Cancel</button></div>
+        </div>
+        <div id="arena-unlock-modal" class="modal-content hidden bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-md w-full">
+            <h2 id="arena-unlock-title" class="text-3xl font-bold mb-4"></h2><p class="text-lg mb-2">You have unlocked new abilities!</p><div id="arena-unlock-cards" class="mb-6 flex justify-center gap-4 flex-wrap"></div><p class="text-gray-400 text-sm">Find them in the shop!</p><button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg mt-4">Continue</button>
         </div>
     </div>
 
     <script>
         // --- DATA DEFINITIONS ---
         const ABILITIES = {
-            'jet-punch': { id: 'jet-punch', name: 'Jet Punch', baseDmg: 15, stamina: 10, rarity: 'Common', baseUpgradeCostYen: 100 },
-            'wind-scar': { id: 'wind-scar', name: 'Wind Scar', baseDmg: 20, stamina: 15, rarity: 'Common', baseUpgradeCostYen: 100 },
-            'demon-slash': { id: 'demon-slash', name: 'Demon Slash', baseDmg: 22, stamina: 20, rarity: 'Common', baseUpgradeCostYen: 125 },
-            'swift-kick': { id: 'swift-kick', name: 'Swift Kick', baseDmg: 12, stamina: 5, rarity: 'Common', baseUpgradeCostYen: 90 },
-            'energy-blast': { id: 'energy-blast', name: 'Energy Blast', baseDmg: 16, stamina: 10, rarity: 'Common', baseUpgradeCostYen: 100 },
-            'stone-fist': { id: 'stone-fist', name: 'Stone Fist', baseDmg: 18, stamina: 15, rarity: 'Common', baseUpgradeCostYen: 110 },
-            'shadow-slice': { id: 'shadow-slice', name: 'Shadow Slice', baseDmg: 25, stamina: 20, rarity: 'Common', baseUpgradeCostYen: 130 },
-            'aura-punch': { id: 'aura-punch', name: 'Aura Punch', baseDmg: 19, stamina: 15, rarity: 'Common', baseUpgradeCostYen: 115 },
-            'rasengan': { id: 'rasengan', name: 'Rasengan', baseDmg: 30, stamina: 25, rarity: 'Rare', baseUpgradeCostYen: 250 },
-            'getsuga-tensho': { id: 'getsuga-tensho', name: 'Getsuga Tensho', baseDmg: 35, stamina: 30, rarity: 'Rare', baseUpgradeCostYen: 300 },
-            'black-flash': { id: 'black-flash', name: 'Black Flash', baseDmg: 50, stamina: 45, rarity: 'Epic', baseUpgradeCostYen: 500 },
-            'kamehameha': { id: 'kamehameha', name: 'Kamehameha', baseDmg: 70, stamina: 60, rarity: 'Legendary', baseUpgradeCostYen: 1000 },
-            'realm-cleave': { id: 'realm-cleave', name: 'Realm Cleave', baseDmg: 100, stamina: 80, rarity: 'Mythic', baseUpgradeCostYen: 2500 },
+            'jet-punch': { id: 'jet-punch', name: 'Jet Punch', baseDmg: 15, stamina: 10, rarity: 'Common', baseUpgradeCostYen: 100, animationType: 'impact' },
+            'wind-scar': { id: 'wind-scar', name: 'Wind Scar', baseDmg: 20, stamina: 15, rarity: 'Common', baseUpgradeCostYen: 100, animationType: 'slash' },
+            'demon-slash': { id: 'demon-slash', name: 'Demon Slash', baseDmg: 22, stamina: 20, rarity: 'Common', baseUpgradeCostYen: 125, animationType: 'slash' },
+            'swift-kick': { id: 'swift-kick', name: 'Swift Kick', baseDmg: 12, stamina: 5, rarity: 'Common', baseUpgradeCostYen: 90, animationType: 'impact' },
+            'energy-blast': { id: 'energy-blast', name: 'Energy Blast', baseDmg: 16, stamina: 10, rarity: 'Common', baseUpgradeCostYen: 100, animationType: 'blast' },
+            'stone-fist': { id: 'stone-fist', name: 'Stone Fist', baseDmg: 18, stamina: 15, rarity: 'Common', baseUpgradeCostYen: 110, animationType: 'impact' },
+            'shadow-slice': { id: 'shadow-slice', name: 'Shadow Slice', baseDmg: 25, stamina: 20, rarity: 'Common', baseUpgradeCostYen: 130, animationType: 'slash' },
+            'aura-punch': { id: 'aura-punch', name: 'Aura Punch', baseDmg: 19, stamina: 15, rarity: 'Common', baseUpgradeCostYen: 115, animationType: 'impact' },
+            'rasengan': { id: 'rasengan', name: 'Rasengan', baseDmg: 30, stamina: 25, rarity: 'Rare', baseUpgradeCostYen: 250, animationType: 'blast' },
+            'getsuga-tensho': { id: 'getsuga-tensho', name: 'Getsuga Tensho', baseDmg: 35, stamina: 30, rarity: 'Rare', baseUpgradeCostYen: 300, animationType: 'slash' },
+            'black-flash': { id: 'black-flash', name: 'Black Flash', baseDmg: 50, stamina: 45, rarity: 'Epic', baseUpgradeCostYen: 500, animationType: 'blast' },
+            'kamehameha': { id: 'kamehameha', name: 'Kamehameha', baseDmg: 70, stamina: 60, rarity: 'Legendary', baseUpgradeCostYen: 1000, evolvable: true, animationType: 'blast' },
+            'realm-cleave': { id: 'realm-cleave', name: 'Realm Cleave', baseDmg: 100, stamina: 80, rarity: 'Mythic', baseUpgradeCostYen: 2500, animationType: 'slash' },
         };
 
-        const RARITY_PROBABILITY = [
-            { rarity: 'Common', weight: 50 },
-            { rarity: 'Rare', weight: 25 },
-            { rarity: 'Epic', weight: 15 },
-            { rarity: 'Legendary', weight: 7 },
-            { rarity: 'Mythic', weight: 3 },
-        ];
+        const STAT_CARDS = {
+            'health': { id: 'health', name: 'Vitality', description: 'Increases your base Health in battles.', rarity: 'Rare', baseUpgradeCostYen: 300 }
+        };
+
+        const EVOLVED_ABILITIES = {
+            'kamehameha': { name: 'Kaioken Kamehameha x10', baseDmg: 140, stamina: 30 }
+        };
+
+        const ARENAS = {
+            1: { name: "Arena 1", minPower: 0, maxPower: 499, unlocks: [] },
+            2: { name: "Arena 2", minPower: 500, maxPower: 999, unlocks: ['rasengan', 'getsuga-tensho'] },
+            3: { name: "Arena 3", minPower: 1000, maxPower: 1499, unlocks: ['black-flash', 'kamehameha'] },
+            4: { name: "Arena 4", minPower: 1500, maxPower: 2000, unlocks: ['realm-cleave'] }
+        };
+
+        const OPPONENTS = {
+            1: { name: "Rookie Fighter", abilities: ['jet-punch', 'swift-kick', 'energy-blast'], maxHP: 100 },
+            2: { name: "Adept Rival", abilities: ['demon-slash', 'rasengan', 'wind-scar'], maxHP: 120 },
+            3: { name: "Elite Warrior", abilities: ['getsuga-tensho', 'black-flash', 'shadow-slice'], maxHP: 150 },
+            4: { name: "Arena Master", abilities: ['kamehameha', 'realm-cleave', 'black-flash'], maxHP: 200 }
+        };
+
+        const BATTLE_PASS_REWARDS = Array.from({ length: 50 }, (_, i) => {
+            const level = i + 1;
+            let reward;
+            if (level === 50) { reward = { type: 'shards', amount: 6 }; } 
+            else if (level % 10 === 0) { reward = { type: 'chest', chestType: 'legendary' }; } 
+            else if (level % 5 === 0) { reward = { type: 'chest', chestType: 'epic' }; } 
+            else if (level % 2 === 0) { reward = { type: 'yen', amount: 100 * level }; } 
+            else { reward = { type: 'gems', amount: 5 + Math.floor(level / 3) * 2 }; }
+            return { level, xp: 10 + Math.floor(level / 2) * 2, reward };
+        });
         
-        // --- GAME STATE ---
+        const CHESTS = {
+            common: { name: 'Common Chest', cost: 10, rewards: { yen: 1, cards: 2 }, guaranteedRarity: null },
+            epic: { name: 'Epic Chest', cost: 25, rewards: { yen: 1, cards: 4 }, guaranteedRarity: 'Rare' },
+            legendary: { name: 'Legendary Chest', cost: 50, rewards: { yen: 1, cards: 7 }, guaranteedRarity: 'Epic' }
+        };
+
+        const YEN_REWARD_WEIGHTS = [ { value: 100, weight: 40 }, { value: 250, weight: 30 }, { value: 500, weight: 20 }, { value: 750, weight: 7 }, { value: 1000, weight: 3 }];
+        const CARD_COUNT_WEIGHTS = [ { value: 1, weight: 35 }, { value: 2, weight: 25 }, { value: 3, weight: 15 }, { value: 4, weight: 10 }, { value: 5, weight: 7 }, { value: 6, weight: 3 }, { value: 7, weight: 2 }, { value: 8, weight: 1 }, { value: 9, weight: 1 }, { value: 10, weight: 1 }];
+        const RARITY_PROBABILITY = [ { rarity: 'Common', weight: 50 }, { rarity: 'Rare', weight: 25 }, { rarity: 'Epic', weight: 15 }, { rarity: 'Legendary', weight: 7 }, { rarity: 'Mythic', weight: 3 } ];
+        
         let gameState = {
-            yen: 500,
-            gems: 10,
-            level: 1,
-            xp: 0,
-            xpToNextLevel: 100,
-            ownedAbilities: {}, // { 'ability-id': { level: 1, count: 1 } }
-            equippedDeck: [], // array of ability-ids
+            yen: 500, gems: 10, powerLevel: 0, highestArenaReached: 1, evolutionShards: 0,
+            ownedAbilities: {}, ownedStats: {}, equippedDeck: [], evolutions: {},
+            passXP: 0, passLevel: 1, claimedPassRewards: [],
         };
 
         let battleState = {
-            inBattle: false,
-            playerHP: 100,
-            maxPlayerHP: 100,
-            playerStamina: 100,
-            maxPlayerStamina: 100,
-            opponentHP: 100,
-            maxOpponentHP: 100,
-            opponentName: "Training Dummy",
-            deck: [],
-            hand: [],
-            isPlayerTurn: true,
+            inBattle: false, playerHP: 100, maxPlayerHP: 100, playerStamina: 0, maxPlayerStamina: 100,
+            opponentHP: 100, maxOpponentHP: 100, opponentStamina: 0, maxOpponentStamina: 100,
+            opponentName: "Training Dummy", opponentAbilities: ['jet-punch', 'wind-scar', 'swift-kick'],
+            deck: [], hand: [], isPlayerTurn: true, turnTimerId: null, usedAbilities: {},
         };
 
-        // --- UTILITY FUNCTIONS ---
-        function getAbilityById(id) {
-            return ABILITIES[id];
-        }
-
-        function calculateDamage(abilityId) {
+        function getAbilityById(id) { return ABILITIES[id]; }
+        function calculateDamage(abilityId, isEvolved = false) {
+            if (isEvolved && EVOLVED_ABILITIES[abilityId]) {
+                const owned = gameState.ownedAbilities[abilityId];
+                const level = owned ? owned.level : 1;
+                return EVOLVED_ABILITIES[abilityId].baseDmg + (level - 1) * Math.ceil(ABILITIES[abilityId].baseDmg * 0.2); // Evolved cards scale better
+            }
             const ability = getAbilityById(abilityId);
             const owned = gameState.ownedAbilities[abilityId];
-            if (!owned) return ability.baseDmg; // Should not happen in battle
-            return ability.baseDmg + (owned.level - 1) * Math.ceil(ability.baseDmg * 0.1);
+            const level = owned ? owned.level : 1;
+            return ability.baseDmg + (level - 1) * Math.ceil(ability.baseDmg * 0.1);
+        }
+        function getAbilityStamina(abilityId, isEvolved = false) {
+            if (isEvolved && EVOLVED_ABILITIES[abilityId]) return EVOLVED_ABILITIES[abilityId].stamina;
+            return ABILITIES[abilityId].stamina;
+        }
+        function getUpgradeCardCost(level) { return Math.pow(2, level); }
+        function getUpgradeYenCost(baseCost, level) { return baseCost * level; }
+        function getWeightedRandom(weightsArray) {
+            const totalWeight = weightsArray.reduce((sum, item) => sum + item.weight, 0);
+            let rand = Math.random() * totalWeight;
+            for (const item of weightsArray) { if (rand < item.weight) return item.value; rand -= item.weight; }
         }
 
-        function getUpgradeCardCost(level) {
-            return Math.pow(2, level);
-        }
-        
-        function getUpgradeYenCost(abilityId, level) {
-            const ability = getAbilityById(abilityId);
-            return ability.baseUpgradeCostYen * level;
-        }
-
-        // --- UI TAB MANAGEMENT ---
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             document.getElementById(`${tabId}-tab`).classList.remove('hidden');
-
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`button[onclick="showTab('${tabId}')"]`).classList.add('active');
-            
-            if (tabId === 'collection') {
-                renderCollection();
-            }
+            if (tabId === 'collection') showCollectionSubTab('abilities');
+            else if (tabId === 'pass') renderBattlePass();
         }
 
-        // --- UI RENDERING ---
         function updateCurrencyDisplay() {
             document.getElementById('yen-currency').textContent = gameState.yen;
             document.getElementById('gem-currency').textContent = gameState.gems;
+            document.getElementById('shard-currency').textContent = gameState.evolutionShards;
         }
-
-        function updatePlayerInfo() {
-            document.getElementById('player-level').textContent = gameState.level;
-            const xpPercentage = (gameState.xp / gameState.xpToNextLevel) * 100;
-            document.getElementById('xp-bar').style.width = `${xpPercentage}%`;
-            document.getElementById('xp-text').textContent = `${gameState.xp}/${gameState.xpToNextLevel}`;
+        function updatePlayerStatsUI() {
+            const currentArena = getArenaForPower(gameState.powerLevel);
+            document.getElementById('player-stats').innerHTML = `<span>Power Level: <span class="text-yellow-400">${gameState.powerLevel}</span></span><span class="ml-4">Arena: <span class="text-indigo-400">${currentArena.name}</span></span>`;
         }
         
-        function createCardElement(abilityId, context) {
-            const ability = getAbilityById(abilityId);
-            const owned = gameState.ownedAbilities[abilityId];
+        function createCardElement(rewardId, context, count = 0, isEvolved = false) {
+            const isAbility = ABILITIES[rewardId];
+            const isStat = STAT_CARDS[rewardId];
             const card = document.createElement('div');
-            card.className = `card bg-gray-800 border-4 ${'rarity-' + ability.rarity.toLowerCase()} rounded-lg p-3 flex flex-col justify-between h-full shadow-lg`;
-            card.dataset.abilityId = abilityId;
+            let owned, base, display;
 
-            let levelInfo = '';
-            if (owned) {
-                levelInfo = `<span class="font-bold text-sm">Lvl ${owned.level}</span>`;
+            card.classList.add('w-24', 'h-36', 'md:w-28', 'md:h-44', 'lg:w-32', 'lg:h-48');
+
+            if (isAbility) {
+                base = getAbilityById(rewardId);
+                display = (isEvolved && EVOLVED_ABILITIES[rewardId]) ? EVOLVED_ABILITIES[rewardId] : base;
+                owned = gameState.ownedAbilities[rewardId];
+                card.className += ` card bg-gray-800 border-4 ${'rarity-' + base.rarity.toLowerCase()} rounded-lg p-2 md:p-3 flex flex-col justify-between shadow-lg`;
+                if (isEvolved) card.classList.add('evolved-glow');
+                card.dataset.abilityId = rewardId;
+                let levelInfo = owned ? `<span class="font-bold text-xs md:text-sm">Lvl ${owned.level}</span>` : '';
+                card.innerHTML = `<div class="flex justify-between items-start"><h4 class="font-bold text-sm md:text-md leading-tight">${display.name}</h4>${levelInfo}</div>
+                    <div class="text-center my-2"><p class="text-xl md:text-2xl font-bold text-red-500">${calculateDamage(rewardId, isEvolved)}</p><p class="text-xs">Damage</p></div>
+                    <div class="text-center"><p class="text-base md:text-lg font-bold text-blue-400">${getAbilityStamina(rewardId, isEvolved)}</p><p class="text-xs">Stamina</p></div>
+                    <p class="text-center text-xs mt-2 font-semibold ${'text-rarity-' + base.rarity.toLowerCase()}">${base.rarity}</p>`;
+                if (context === 'unequip_overlay') {
+                    card.innerHTML += `<div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-xs font-bold rounded-lg opacity-0 hover:opacity-100 transition-opacity">UNEQUIP</div>`;
+                    card.classList.add('cursor-pointer', 'relative');
+                } else if (context === 'preview-small') {
+                    card.classList.remove('p-2', 'md:p-3'); card.classList.add('p-1');
+                    card.innerHTML = `<h4 class="font-bold text-xs leading-tight text-center">${display.name}</h4><p class="text-center text-xs mt-1 font-semibold ${'text-rarity-' + base.rarity.toLowerCase()}">${base.rarity}</p>`;
+                }
+            } else if (isStat) {
+                base = STAT_CARDS[rewardId];
+                owned = gameState.ownedStats[rewardId];
+                card.className += ` card bg-gray-800 border-4 ${'rarity-' + base.rarity.toLowerCase()} rounded-lg p-2 md:p-3 flex flex-col justify-between shadow-lg`;
+                card.dataset.statId = rewardId;
+                let levelInfo = owned ? `<span class="font-bold text-xs md:text-sm">Lvl ${owned.level}</span>` : '';
+                card.innerHTML = `<div class="flex justify-between items-start"><h4 class="font-bold text-sm md:text-md leading-tight">${base.name}</h4>${levelInfo}</div>
+                    <div class="text-center my-auto"><p class="text-base md:text-lg font-bold text-green-400">+${(owned ? owned.level-1 : 0) * 50} HP</p><p class="text-xs text-gray-400 mt-1">${base.description}</p></div>
+                    <p class="text-center text-xs mt-2 font-semibold ${'text-rarity-' + base.rarity.toLowerCase()}">${base.rarity}</p>`;
             }
 
-            card.innerHTML = `
-                <div class="flex justify-between items-start">
-                    <h4 class="font-bold text-md leading-tight">${ability.name}</h4>
-                    ${levelInfo}
-                </div>
-                <div class="text-center my-2">
-                    <p class="text-2xl font-bold text-red-500">${calculateDamage(abilityId)}</p>
-                    <p class="text-xs">Damage</p>
-                </div>
-                <div class="text-center">
-                    <p class="text-lg font-bold text-blue-400">${ability.stamina}</p>
-                    <p class="text-xs">Stamina</p>
-                </div>
-                <p class="text-center text-xs mt-2 font-semibold ${'text-rarity-' + ability.rarity.toLowerCase()}">${ability.rarity}</p>
-            `;
-            
-            if (context === 'hand') {
-                card.classList.add('cursor-pointer');
-                card.onclick = () => useAbility(abilityId);
-            } else if (context === 'unequip_overlay') {
-                 card.innerHTML += `<div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center text-white text-xs font-bold rounded-lg opacity-0 hover:opacity-100 transition-opacity">UNEQUIP</div>`;
-                card.classList.add('cursor-pointer', 'relative');
-            }
-
+            if (count > 0) card.innerHTML += `<div class="card-count-badge">x${count}</div>`;
+            if (context === 'hand') card.classList.add('cursor-pointer'); 
             return card;
+        }
+
+
+        function showCollectionSubTab(subTabId) {
+            document.querySelectorAll('.collection-sub-content').forEach(tab => tab.classList.add('hidden'));
+            document.getElementById(`${subTabId}-sub-tab`).classList.remove('hidden');
+            document.querySelectorAll('.sub-tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelector(`button[onclick="showCollectionSubTab('${subTabId}')"]`).classList.add('active');
+            if(subTabId === 'abilities') renderCollection();
+            else if (subTabId === 'evolution') renderEvolutionTab();
+            else if (subTabId === 'character') renderCharacterTab();
         }
 
         function renderCollection() {
             const ownedList = document.getElementById('owned-abilities-list');
             const equippedSlots = document.getElementById('equipped-deck-slots');
-            ownedList.innerHTML = '';
-            equippedSlots.innerHTML = '';
-
-            // Render Equipped Slots
+            ownedList.innerHTML = ''; equippedSlots.innerHTML = '';
             for (let i = 0; i < 8; i++) {
                 const slot = document.createElement('div');
                 const abilityId = gameState.equippedDeck[i];
-                if (abilityId) {
-                    const card = createCardElement(abilityId, 'unequip_overlay');
-                    card.onclick = () => toggleEquipAbility(abilityId);
-                    slot.appendChild(card);
-                } else {
-                    slot.className = 'bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center min-h-[150px]';
-                    slot.innerHTML = `<span class="text-gray-500 text-xs text-center p-2">Empty Slot</span>`;
-                }
+                if (abilityId) { const card = createCardElement(abilityId, 'unequip_overlay'); card.onclick = () => toggleEquipAbility(abilityId); slot.appendChild(card); } 
+                else { slot.className = 'bg-gray-700/50 rounded-lg border-2 border-dashed border-gray-600 h-full'; }
                 equippedSlots.appendChild(slot);
             }
-
-            // Render Owned Abilities List
             const sortedOwnedAbilities = Object.keys(gameState.ownedAbilities).sort((a, b) => {
                 const rarityOrder = { 'Common': 0, 'Rare': 1, 'Epic': 2, 'Legendary': 3, 'Mythic': 4 };
-                const rarityA = rarityOrder[ABILITIES[a].rarity];
-                const rarityB = rarityOrder[ABILITIES[b].rarity];
-                if (rarityB !== rarityA) return rarityB - rarityA;
-                return ABILITIES[a].name.localeCompare(ABILITIES[b].name);
+                const rarityA = rarityOrder[getAbilityById(a).rarity]; const rarityB = rarityOrder[getAbilityById(b).rarity];
+                if (rarityA !== rarityB) return rarityB - rarityA;
+                return getAbilityById(a).name.localeCompare(getAbilityById(b).name);
             });
-
-            if (sortedOwnedAbilities.length === 0) {
-                 ownedList.innerHTML = `<p class="text-center text-gray-500">You don't own any abilities. Visit the shop!</p>`;
-                 return;
-            }
-
-            for (const abilityId of sortedOwnedAbilities) {
-                const ability = getAbilityById(abilityId);
-                const owned = gameState.ownedAbilities[abilityId];
-                const isEquipped = gameState.equippedDeck.includes(abilityId);
-
+            sortedOwnedAbilities.forEach(abilityId => {
+                const owned = gameState.ownedAbilities[abilityId]; const isEquipped = gameState.equippedDeck.includes(abilityId);
                 const listItem = document.createElement('div');
                 listItem.className = `flex items-center p-2 rounded-lg gap-4 cursor-pointer hover:bg-gray-700 transition-colors ${isEquipped ? 'bg-indigo-900/50' : 'bg-gray-800'}`;
                 listItem.onclick = () => toggleEquipAbility(abilityId);
-
-                const cardContainer = document.createElement('div');
-                cardContainer.className = 'w-24 flex-shrink-0';
-                cardContainer.appendChild(createCardElement(abilityId, 'preview'));
-
-                const infoContainer = document.createElement('div');
-                infoContainer.className = 'flex-grow';
-                infoContainer.innerHTML = `
-                    <h4 class="font-bold text-lg">${ability.name}</h4>
-                    <p class="text-sm font-semibold ${'text-rarity-' + ability.rarity.toLowerCase()}">${ability.rarity}</p>
-                    <p class="text-xs text-gray-400 mt-1">Owned: ${owned.count} | Level: ${owned.level}</p>
-                `;
-
-                const actionsContainer = document.createElement('div');
-                actionsContainer.className = 'flex flex-col gap-2 w-32 text-center justify-center items-center';
-                
-                if (isEquipped) {
-                   actionsContainer.innerHTML = `<span class="font-semibold text-indigo-400">Equipped</span>`;
-                }
-
+                const cardContainer = document.createElement('div'); cardContainer.className = 'w-24 md:w-28 flex-shrink-0'; cardContainer.appendChild(createCardElement(abilityId, 'preview'));
+                const infoContainer = document.createElement('div'); infoContainer.className = 'flex-grow';
+                infoContainer.innerHTML = `<h4 class="font-bold text-lg">${getAbilityById(abilityId).name}</h4><p class="text-sm font-semibold ${'text-rarity-' + getAbilityById(abilityId).rarity.toLowerCase()}">${getAbilityById(abilityId).rarity}</p><p class="text-xs text-gray-400 mt-1">Owned: ${owned.count} | Level: ${owned.level}</p>`;
+                const actionsContainer = document.createElement('div'); actionsContainer.className = 'flex flex-col gap-2 w-32 text-center justify-center items-center';
+                if (isEquipped) actionsContainer.innerHTML = `<span class="font-semibold text-indigo-400">Equipped</span>`;
                 if (owned.level < 15) {
                     const cardCost = getUpgradeCardCost(owned.level);
-                    const yenCost = getUpgradeYenCost(abilityId, owned.level);
-
+                    const yenCost = getUpgradeYenCost(getAbilityById(abilityId).baseUpgradeCostYen, owned.level);
                     const upgradeBtn = document.createElement('button');
                     upgradeBtn.className = 'bg-green-600 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-xs transition w-full';
                     upgradeBtn.innerHTML = `Upgrade <br> (${owned.count}/${cardCost} | ¥${yenCost})`;
-                    
-                    if (owned.count < cardCost || gameState.yen < yenCost) {
-                        upgradeBtn.disabled = true;
-                        upgradeBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                    }
-                    upgradeBtn.onclick = (e) => {
-                        e.stopPropagation(); // Prevent toggling equip when clicking upgrade
-                        openUpgradeModal(abilityId);
-                    }
+                    if (owned.count < cardCost || gameState.yen < yenCost) { upgradeBtn.disabled = true; upgradeBtn.classList.add('opacity-50', 'cursor-not-allowed'); }
+                    upgradeBtn.onclick = (e) => { e.stopPropagation(); openUpgradeModal('ability', abilityId); };
                     actionsContainer.appendChild(upgradeBtn);
                 }
+                listItem.appendChild(cardContainer); listItem.appendChild(infoContainer); listItem.appendChild(actionsContainer); ownedList.appendChild(listItem);
+            });
+        }
+        
+        function renderCharacterTab() {
+            const container = document.getElementById('character-stats-container');
+            container.innerHTML = '';
+            Object.keys(gameState.ownedStats).forEach(statId => {
+                const stat = STAT_CARDS[statId];
+                const owned = gameState.ownedStats[statId];
+                const panel = document.createElement('div');
+                panel.className = 'bg-gray-900 p-6 rounded-lg w-full max-w-2xl flex items-center gap-6';
 
+                const cardDisplay = document.createElement('div');
+                cardDisplay.className = 'w-40 flex-shrink-0';
+                cardDisplay.appendChild(createCardElement(statId, 'stat-ui'));
 
-                listItem.appendChild(cardContainer);
-                listItem.appendChild(infoContainer);
-                listItem.appendChild(actionsContainer);
-                ownedList.appendChild(listItem);
-            }
+                const infoDisplay = document.createElement('div');
+                infoDisplay.className = 'flex-grow';
+                
+                let buttonHTML = '';
+                 if (owned.level < 15) {
+                    const cardCost = getUpgradeCardCost(owned.level);
+                    const yenCost = getUpgradeYenCost(stat.baseUpgradeCostYen, owned.level);
+                    const canUpgrade = owned.count >= cardCost && gameState.yen >= yenCost;
+                    buttonHTML = `<button ${!canUpgrade ? 'disabled' : ''} onclick="openUpgradeModal('stat', '${statId}')" class="w-full ${canUpgrade ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-600 opacity-50 cursor-not-allowed'} text-white font-bold py-3 px-6 rounded-lg text-lg flex items-center justify-center space-x-2 mt-4">
+                        <span>Upgrade (${owned.count}/${cardCost} | ¥${yenCost})</span></button>`;
+                } else {
+                    buttonHTML = `<button disabled class="w-full bg-green-800 text-white font-bold py-3 px-6 rounded-lg text-lg flex items-center justify-center space-x-2 mt-4 cursor-not-allowed">Max Level</button>`;
+                }
+
+                infoDisplay.innerHTML = `
+                    <h3 class="text-3xl font-bold">${stat.name}</h3>
+                    <p class="text-gray-400 mt-1">${stat.description}</p>
+                    <div class="mt-4 bg-gray-800 p-3 rounded-lg">
+                        <p>Current Level: <span class="font-bold text-xl text-green-400">${owned.level}</span></p>
+                        <p>Total Health Bonus: <span class="font-bold text-xl text-green-400">+${(owned.level - 1) * 50} HP</span></p>
+                    </div>
+                    ${buttonHTML}
+                `;
+
+                panel.appendChild(cardDisplay);
+                panel.appendChild(infoDisplay);
+                container.appendChild(panel);
+            });
         }
 
-        // --- BATTLE LOGIC ---
-        function startBattle() {
-             if (gameState.equippedDeck.length < 8) {
-                // Using a custom modal-like alert would be better in a real game
-                alert("You need 8 abilities in your deck to battle!");
-                return;
+        function renderEvolutionTab() {
+            const container = document.getElementById('evolution-container'); container.innerHTML = '';
+            const evoAbilityId = 'kamehameha'; const cost = 6;
+            if (!gameState.ownedAbilities[evoAbilityId]) { container.innerHTML = `<p class="text-gray-400">You do not own Kamehameha yet. Find it in chests!</p>`; return; }
+            const isEvolved = gameState.evolutions[evoAbilityId];
+            const evoPanel = document.createElement('div'); evoPanel.className = 'bg-gray-900 p-6 rounded-lg w-full max-w-2xl';
+            let buttonHTML = '';
+            if (isEvolved) { buttonHTML = `<button disabled class="w-full bg-green-800 text-white font-bold py-3 px-6 rounded-lg text-lg flex items-center justify-center space-x-2 mt-4 cursor-not-allowed">Evolved!</button>`; } 
+            else {
+                const canEvolve = gameState.evolutionShards >= cost;
+                buttonHTML = `<button ${!canEvolve ? 'disabled' : ''} onclick="evolveAbility('${evoAbilityId}')" class="w-full ${canEvolve ? 'bg-purple-600 hover:bg-purple-700' : 'bg-gray-600 opacity-50 cursor-not-allowed'} text-white font-bold py-3 px-6 rounded-lg text-lg flex items-center justify-center space-x-2 mt-4">
+                    <span>Evolve (${gameState.evolutionShards}/${cost})</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.293 2.293a1 1 0 010 1.414L11 12l4.293 4.293a1 1 0 01-1.414 1.414L12 13.414l-2.293 2.293a1 1 0 01-1.414 0L6 13.414 3.707 11.121a1 1 0 010-1.414L6 7.414l2.293-2.293a1 1 0 011.414 0L12 7.414l2.293-2.293a1 1 0 011.414 0L18 7.414l2.293 2.293a1 1 0 010 1.414L18 13.414l-2.293 2.293a1 1 0 01-1.414 0L12 13.414l-2.293 2.293a1 1 0 01-1.414-1.414L11 12 8.707 9.707a1 1 0 010-1.414L11 6l2.293-2.293a1 1 0 011.414 0z"></path></svg></button>`;
             }
-            battleState = {
-                inBattle: true,
-                playerHP: 100, maxPlayerHP: 100, playerStamina: 100, maxPlayerStamina: 100,
-                opponentHP: 100, maxOpponentHP: 100, opponentName: "Training Dummy",
-                deck: [...gameState.equippedDeck], hand: [], isPlayerTurn: true,
-            };
+            evoPanel.innerHTML = `<div class="flex items-center justify-around text-center">
+                    <div class="w-40">${createCardElement(evoAbilityId, 'evo-ui').outerHTML}</div>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                    <div class="w-40">${createCardElement(evoAbilityId, 'evo-ui', 0, true).outerHTML}</div>
+                </div>
+                <div class="mt-4 text-center"><p class="text-gray-300">Unlock the evolved form of Kamehameha. When set as your main card (first deck slot), it will transform in battle after its first use.</p></div>
+                ${buttonHTML}`;
+            container.appendChild(evoPanel);
+        }
 
+        function evolveAbility(abilityId) { const cost = 6; if(gameState.evolutionShards >= cost && !gameState.evolutions[abilityId]) { gameState.evolutionShards -= cost; gameState.evolutions[abilityId] = true; updateCurrencyDisplay(); renderEvolutionTab(); } }
+        
+        function startBattle() {
+            if (gameState.equippedDeck.length < 8) { alert("You need 8 abilities in your deck to battle!"); return; }
+            document.getElementById('main-nav').classList.add('hidden');
+            const playerArenaNum = parseInt(getArenaForPower(gameState.powerLevel).name.split(" ")[1]);
+            const opponentData = OPPONENTS[playerArenaNum] || OPPONENTS[1];
+            const healthLevel = gameState.ownedStats.health ? gameState.ownedStats.health.level : 1;
+            const maxHP = 100 + (healthLevel - 1) * 50;
+            battleState = {
+                inBattle: true, playerHP: maxHP, maxPlayerHP: maxHP, playerStamina: 0, maxPlayerStamina: 100,
+                opponentHP: opponentData.maxHP, maxOpponentHP: opponentData.maxHP, opponentStamina: 0, maxOpponentStamina: 100,
+                opponentName: opponentData.name, opponentAbilities: opponentData.abilities,
+                deck: [...gameState.equippedDeck], hand: [], isPlayerTurn: true, turnTimerId: null, usedAbilities: {},
+            };
             shuffleDeck();
             for(let i = 0; i < 4; i++) { drawCard(); }
-
             document.getElementById('battle-lobby').classList.add('hidden');
             document.getElementById('battle-arena').classList.remove('hidden');
             updateBattleUI();
+            setTimeout(startPlayerTurn, 1000);
         }
-
-        function shuffleDeck() {
-            // Fisher-Yates shuffle
-            for (let i = battleState.deck.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [battleState.deck[i], battleState.deck[j]] = [battleState.deck[j], battleState.deck[i]];
-            }
-        }
-
-        function drawCard() {
-            if (battleState.deck.length === 0) return; // Should not run out with this logic
-            const cardId = battleState.deck.pop();
-            battleState.hand.push(cardId);
-        }
-
+        function shuffleDeck() { for (let i = battleState.deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [battleState.deck[i], battleState.deck[j]] = [battleState.deck[j], battleState.deck[i]]; } }
+        function drawCard() { if (battleState.deck.length === 0) return; const cardId = battleState.deck.pop(); battleState.hand.push(cardId); }
+        
         function useAbility(abilityId, cardElement) {
             if (!battleState.isPlayerTurn) return;
-            const ability = getAbilityById(abilityId);
-            if (battleState.playerStamina < ability.stamina) { 
-                cardElement.classList.add('shake');
-                setTimeout(() => cardElement.classList.remove('shake'), 500);
-                return; 
-            }
-
+            const isEvolved = isAbilityEvolvedInBattle(abilityId);
+            const staminaCost = getAbilityStamina(abilityId, isEvolved);
+            if (battleState.playerStamina < staminaCost) { cardElement.classList.add('shake'); setTimeout(() => cardElement.classList.remove('shake'), 500); return; }
+            clearTimeout(battleState.turnTimerId);
             battleState.isPlayerTurn = false;
-            document.getElementById('turn-indicator').textContent = "Opponent's Turn";
             
-            // Animate the card being used
-            cardElement.classList.add('card-attack-animation');
+            playAnimation(getAbilityById(abilityId).animationType);
 
             setTimeout(() => {
-                battleState.playerStamina -= ability.stamina;
-                const damage = calculateDamage(abilityId);
-                battleState.opponentHP -= damage;
+                cardElement.classList.add('card-attack-animation');
+            }, 100);
 
-                // Visual feedback for damage
+
+            setTimeout(() => {
+                battleState.playerStamina -= staminaCost;
+                const damage = calculateDamage(abilityId, isEvolved);
+                battleState.opponentHP -= damage;
+                battleState.usedAbilities[abilityId] = true; // Mark as used
+                
                 const opponentInfo = document.getElementById('opponent-info');
                 showDamagePopup(opponentInfo, damage);
                 opponentInfo.classList.add('impact-flash');
                 setTimeout(() => opponentInfo.classList.remove('impact-flash'), 300);
-
-
-                // Remove card from hand, put it on bottom of deck, draw new card
                 const cardIndex = battleState.hand.indexOf(abilityId);
                 if (cardIndex > -1) { battleState.hand.splice(cardIndex, 1); }
-                battleState.deck.unshift(abilityId); // Add to bottom of deck
+                battleState.deck.unshift(abilityId);
                 drawCard();
-                
                 updateBattleUI();
-                
-                if (battleState.opponentHP <= 0) {
-                    endBattle(true);
-                    return;
-                }
-
-                // Opponent's turn
+                if (battleState.opponentHP <= 0) { endBattle(true); return; }
                 setTimeout(opponentTurn, 1500);
-            }, 500); // Wait for card animation to finish
+            }, 600);
         }
-
-        function opponentTurn() {
-            const opponentDamage = 10 + gameState.level * 2;
-            battleState.playerHP -= opponentDamage;
-            
-            const playerInfo = document.getElementById('player-battle-info');
-            showDamagePopup(playerInfo, opponentDamage);
-            playerInfo.classList.add('impact-flash');
-            setTimeout(() => playerInfo.classList.remove('impact-flash'), 300);
-
-            if (battleState.playerHP <= 0) {
-                endBattle(false);
-                return;
-            }
-
-            // Player regenerates stamina
+        function startPlayerTurn() {
             battleState.playerStamina = Math.min(battleState.maxPlayerStamina, battleState.playerStamina + 10);
-            
-            battleState.isPlayerTurn = true;
-            document.getElementById('turn-indicator').textContent = "Your Turn";
-            updateBattleUI();
+            battleState.isPlayerTurn = true; updateBattleUI();
+            let timeLeft = 5; 
+            const timerDisplay = document.getElementById('turn-timer-display');
+            // timerDisplay.textContent = timeLeft; // This is now hidden
+            battleState.turnTimerId = setInterval(() => { timeLeft--; if (timeLeft <= 0) { skipPlayerTurn(); } }, 1000);
         }
+        function skipPlayerTurn() { clearTimeout(battleState.turnTimerId); if (!battleState.isPlayerTurn) return; battleState.isPlayerTurn = false; updateBattleUI(); setTimeout(opponentTurn, 500); }
+        function opponentTurn() {
+            battleState.opponentStamina = Math.min(battleState.maxOpponentStamina, battleState.opponentStamina + 10); updateBattleUI();
+            const usableAbilities = battleState.opponentAbilities.filter(id => getAbilityById(id).stamina <= battleState.opponentStamina);
+            if (usableAbilities.length > 0) {
+                usableAbilities.sort((a, b) => getAbilityById(b).baseDmg - getAbilityById(a).baseDmg);
+                const chosenAbilityId = usableAbilities[0];
+                const ability = getAbilityById(chosenAbilityId);
+                
+                playAnimation(ability.animationType);
 
-        function endBattle(playerWon) {
-            battleState.inBattle = false;
-            let title, rewardsText;
-            if (playerWon) {
-                const yenGained = 50 + Math.floor(Math.random() * 25) * gameState.level;
-                const xpGained = 50;
-                gameState.yen += yenGained;
-                gameState.xp += xpGained;
-                title = "You Won!";
-                rewardsText = `You earned ${yenGained} Yen and ${xpGained} XP.`;
-                checkLevelUp();
+                setTimeout(() => {
+                    const opponentDamage = ability.baseDmg;
+                    battleState.opponentStamina -= ability.stamina; battleState.playerHP -= opponentDamage;
+                    const playerInfo = document.getElementById('player-battle-info');
+                    showDamagePopup(playerInfo, opponentDamage);
+                    playerInfo.classList.add('impact-flash'); setTimeout(() => playerInfo.classList.remove('impact-flash'), 300);
+                    if (battleState.playerHP <= 0) { setTimeout(() => endBattle(false), 500); return; }
+                    setTimeout(startPlayerTurn, 1500);
+                }, 600);
             } else {
-                title = "You Lost!";
-                rewardsText = "Better luck next time.";
+                 setTimeout(startPlayerTurn, 1500);
             }
-            
-            updateCurrencyDisplay();
-            updatePlayerInfo();
-
-            document.getElementById('battle-result-title').textContent = title;
-            document.getElementById('battle-result-rewards').textContent = rewardsText;
-            showModal('battle-result-modal');
-
-            document.getElementById('battle-lobby').classList.remove('hidden');
-            document.getElementById('battle-arena').classList.add('hidden');
         }
+        function endBattle(playerWon) {
+            clearTimeout(battleState.turnTimerId); document.getElementById('main-nav').classList.remove('hidden'); battleState.inBattle = false;
+            let title, rewardsText; const oldPowerLevel = gameState.powerLevel;
+            if (playerWon) {
+                gameState.powerLevel += 30; const passXpReward = 10; gameState.passXP += passXpReward;
+                const yenReward = 10 + Math.floor(Math.random() * 15); const gemReward = Math.random() < 0.1 ? 1 : 0;
+                gameState.yen += yenReward; gameState.gems += gemReward;
+                title = "You Won!"; rewardsText = `Gained: 30 Power, ${passXpReward} Pass XP, ¥${yenReward}`;
+                if (gemReward > 0) rewardsText += `, ${gemReward} Gem!`; else rewardsText += `!`;
+                checkPassLevelUp();
+            } else {
+                gameState.powerLevel = Math.max(0, gameState.powerLevel - 30); title = "You Lost!"; rewardsText = "You lost 30 Power Level.";
+            }
+            updateCurrencyDisplay(); updatePlayerStatsUI(); checkForArenaUp(oldPowerLevel, gameState.powerLevel);
+            document.getElementById('battle-result-title').textContent = title; document.getElementById('battle-result-rewards').textContent = rewardsText;
+            showModal('battle-result-modal');
+            document.getElementById('battle-lobby').classList.remove('hidden'); document.getElementById('battle-arena').classList.add('hidden');
+        }
+        
+        function playAnimation(animationType) {
+            const overlay = document.getElementById('animation-overlay');
+            const animElement = document.createElement('div');
+            animElement.className = `animation-${animationType}`;
+            overlay.appendChild(animElement);
+            setTimeout(() => {
+                animElement.remove();
+            }, 500);
+        }
+
+        function isAbilityEvolvedInBattle(abilityId) { return abilityId === 'kamehameha' && gameState.evolutions['kamehameha'] && gameState.equippedDeck[0] === 'kamehameha' && battleState.usedAbilities['kamehameha']; }
 
         function updateBattleUI() {
+            document.getElementById('opponent-name').textContent = battleState.opponentName;
             const playerHPPct = Math.max(0, (battleState.playerHP / battleState.maxPlayerHP) * 100);
             const opponentHPPct = Math.max(0, (battleState.opponentHP / battleState.maxOpponentHP) * 100);
             const playerStaminaPct = (battleState.playerStamina / battleState.maxPlayerStamina) * 100;
-            
-            document.getElementById('player-hp-bar').style.width = `${playerHPPct}%`;
-            document.getElementById('player-hp-bar').textContent = `${Math.ceil(battleState.playerHP)}/${battleState.maxPlayerHP}`;
-            document.getElementById('opponent-hp-bar').style.width = `${opponentHPPct}%`;
-            document.getElementById('opponent-hp-bar').textContent = `${Math.ceil(battleState.opponentHP)}/${battleState.maxOpponentHP}`;
-            document.getElementById('player-stamina-bar').style.width = `${playerStaminaPct}%`;
-            document.getElementById('player-stamina-bar').textContent = `${battleState.playerStamina}/${battleState.maxPlayerStamina}`;
-
+            document.getElementById('player-hp-bar').style.width = `${playerHPPct}%`; document.getElementById('player-hp-bar').textContent = `${Math.ceil(battleState.playerHP)}/${battleState.maxPlayerHP}`;
+            document.getElementById('opponent-hp-bar').style.width = `${opponentHPPct}%`; document.getElementById('opponent-hp-bar').textContent = `${Math.ceil(battleState.opponentHP)}/${battleState.maxOpponentHP}`;
+            document.getElementById('player-stamina-bar').style.width = `${playerStaminaPct}%`; document.getElementById('player-stamina-bar').textContent = `${battleState.playerStamina}/${battleState.maxPlayerStamina}`;
+            document.getElementById('turn-indicator').textContent = battleState.isPlayerTurn ? "Your Turn" : "Opponent's Turn";
             const handContainer = document.getElementById('player-hand');
             handContainer.innerHTML = '';
-            battleState.hand.forEach(abilityId => {
-                const card = createCardElement(abilityId, 'hand');
-                // Re-bind the onclick here to pass the element itself for animation
-                card.onclick = () => useAbility(abilityId, card);
-                handContainer.appendChild(card);
-            });
+            battleState.hand.forEach(abilityId => { const isEvolved = isAbilityEvolvedInBattle(abilityId); const card = createCardElement(abilityId, 'hand', 0, isEvolved); card.onclick = () => useAbility(abilityId, card); handContainer.appendChild(card); });
+            const nextCardPreview = document.getElementById('next-card-preview'); nextCardPreview.innerHTML = '';
+            if (battleState.deck.length > 0) { const nextAbilityId = battleState.deck[battleState.deck.length - 1]; const isEvolved = isAbilityEvolvedInBattle(nextAbilityId); const nextCard = createCardElement(nextAbilityId, 'preview-small', 0, isEvolved); nextCardPreview.appendChild(nextCard); }
+        }
+        function getArenaForPower(power) { for (let i = Object.keys(ARENAS).length; i >= 1; i--) if (power >= ARENAS[i].minPower) return ARENAS[i]; return ARENAS[1]; }
+        function checkForArenaUp(oldPower, newPower) {
+            const oldArenaNum = parseInt(getArenaForPower(oldPower).name.split(" ")[1]);
+            const newArenaData = getArenaForPower(newPower); const newArenaNum = parseInt(newArenaData.name.split(" ")[1]);
+            if (newArenaNum > gameState.highestArenaReached && newArenaNum > oldArenaNum) {
+                gameState.highestArenaReached = newArenaNum;
+                const modalTitle = document.getElementById('arena-unlock-title'); const modalCards = document.getElementById('arena-unlock-cards');
+                modalTitle.textContent = `You've reached ${newArenaData.name}!`; modalCards.innerHTML = '';
+                newArenaData.unlocks.forEach(abilityId => modalCards.appendChild(createCardElement(abilityId, 'shop')));
+                setTimeout(() => showModal('arena-unlock-modal'), 500);
+            }
         }
         
-        function checkLevelUp() {
-            while (gameState.xp >= gameState.xpToNextLevel) {
-                gameState.level++;
-                gameState.xp -= gameState.xpToNextLevel;
-                gameState.xpToNextLevel = Math.floor(gameState.xpToNextLevel * 1.5);
-                const gemsGained = 5;
-                gameState.gems += gemsGained;
-                 // Can't use alert in a loop like this effectively
-                console.log(`Level up! You are now level ${gameState.level} and gained ${gemsGained} gems!`);
-            }
-            updatePlayerInfo(); // Update UI after potential multiple level ups
-        }
-
-        // --- SHOP LOGIC ---
-        function buyFromShop(type) {
-            const costs = { single: 5, triple: 14, rare_plus: 20 };
-            const cost = costs[type];
-
-            if (gameState.gems < cost) {
-                alert("Not enough gems!");
-                return;
-            }
-
-            gameState.gems -= cost;
-            updateCurrencyDisplay();
-
-            const acquiredAbilities = [];
-            const iterations = type === 'triple' ? 3 : 1;
-
-            for (let i = 0; i < iterations; i++) {
-                let rarityPool = RARITY_PROBABILITY;
-                if (type === 'rare_plus') {
-                    rarityPool = RARITY_PROBABILITY.filter(r => r.rarity !== 'Common');
+        function renderBattlePass() {
+            const passContainer = document.getElementById('battle-pass-rewards'); passContainer.innerHTML = '';
+            BATTLE_PASS_REWARDS.forEach(tier => {
+                const tierElement = document.createElement('div'); const isClaimed = gameState.claimedPassRewards.includes(tier.level); const canClaim = gameState.passLevel >= tier.level && !isClaimed;
+                let buttonHTML;
+                if(isClaimed) buttonHTML = `<button disabled class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg text-sm w-28">Claimed</button>`;
+                else if(canClaim) buttonHTML = `<button onclick="claimPassReward(${tier.level})" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg text-sm w-28">Claim</button>`;
+                else buttonHTML = `<button disabled class="bg-gray-700 text-white font-bold py-2 px-4 rounded-lg text-sm opacity-50 w-28">Locked</button>`;
+                let rewardText = '';
+                switch(tier.reward.type) {
+                    case 'yen': rewardText = `¥ ${tier.reward.amount}`; break;
+                    case 'gems': rewardText = `${tier.reward.amount} Gems`; break;
+                    case 'chest': rewardText = `1x ${CHESTS[tier.reward.chestType].name}`; break;
+                    case 'ability': rewardText = `${tier.reward.count}x ${getAbilityById(tier.reward.abilityId).name}`; break;
+                    case 'shards': rewardText = `${tier.reward.amount} Evolution Shards`; break;
                 }
-                
-                const totalWeight = rarityPool.reduce((sum, r) => sum + r.weight, 0);
-                const rand = Math.random() * totalWeight;
-                let cumulativeWeight = 0;
-                let chosenRarity;
-
-                for (const rarityInfo of rarityPool) {
-                    cumulativeWeight += rarityInfo.weight;
-                    if (rand <= cumulativeWeight) {
-                        chosenRarity = rarityInfo.rarity;
-                        break;
-                    }
-                }
-                
-                const abilitiesOfRarity = Object.values(ABILITIES).filter(a => a.rarity === chosenRarity);
-                const randomAbility = abilitiesOfRarity[Math.floor(Math.random() * abilitiesOfRarity.length)];
-                
-                addAbilityToCollection(randomAbility.id);
-                acquiredAbilities.push(randomAbility.id);
-            }
-            
-            const shopResultCardsContainer = document.getElementById('shop-result-cards');
-            shopResultCardsContainer.innerHTML = '';
-            acquiredAbilities.forEach(abilityId => {
-                const cardElement = createCardElement(abilityId, 'shop');
-                // Ensure the owned data is up to date for the card element
-                cardElement.innerHTML = createCardElement(abilityId, 'shop').innerHTML;
-                shopResultCardsContainer.appendChild(cardElement);
+                tierElement.className = `flex items-center justify-between p-3 rounded-lg ${canClaim ? 'bg-yellow-900/50 border-2 border-yellow-500' : 'bg-gray-900'}`;
+                tierElement.innerHTML = `<div class="flex items-center gap-4"><span class="font-bold text-lg w-12 text-center py-2 bg-gray-700 rounded">Lvl ${tier.level}</span><span class="font-semibold">${rewardText}</span></div>${buttonHTML}`;
+                passContainer.appendChild(tierElement);
             });
-
-            const title = document.getElementById('shop-result-title');
-            title.textContent = acquiredAbilities.length > 1 ? "You acquired new abilities!" : "You acquired a new ability!";
+            updateBattlePassUI();
+        }
+        function updateBattlePassUI() {
+            const currentTier = BATTLE_PASS_REWARDS.find(t => t.level === gameState.passLevel) || BATTLE_PASS_REWARDS[BATTLE_PASS_REWARDS.length-1];
+            const xpForNextLevel = currentTier.xp;
+            document.getElementById('pass-level-display').textContent = `Level ${gameState.passLevel}`;
+            document.getElementById('pass-xp-display').textContent = `${gameState.passXP} / ${xpForNextLevel} XP`;
+            const xpPercentage = (gameState.passXP / xpForNextLevel) * 100;
+            document.getElementById('pass-xp-bar').style.width = `${Math.min(100, xpPercentage)}%`;
+        }
+        function checkPassLevelUp() { const currentTier = BATTLE_PASS_REWARDS.find(t => t.level === gameState.passLevel); if (!currentTier || gameState.passXP < currentTier.xp) return; gameState.passXP -= currentTier.xp; gameState.passLevel++; checkPassLevelUp(); }
+        function claimPassReward(level) {
+            if (gameState.claimedPassRewards.includes(level) || gameState.passLevel < level) return;
+            const tier = BATTLE_PASS_REWARDS.find(t => t.level === level); if (!tier) return;
+            switch(tier.reward.type) {
+                case 'yen': gameState.yen += tier.reward.amount; break;
+                case 'gems': gameState.gems += tier.reward.amount; break;
+                case 'shards': gameState.evolutionShards += tier.reward.amount; break;
+                case 'chest': openChest(tier.reward.chestType); break;
+                case 'ability': addAbilityToCollection(tier.reward.abilityId, tier.reward.count); break;
+            }
+            updateCurrencyDisplay(); gameState.claimedPassRewards.push(level); renderBattlePass();
+        }
+        
+        function buyChest(chestType) { const chest = CHESTS[chestType]; if (!chest || gameState.gems < chest.cost) return; gameState.gems -= chest.cost; updateCurrencyDisplay(); openChest(chestType); }
+        function openChest(chestType) {
+            const chest = CHESTS[chestType]; if (!chest) return;
+            const rewards = { yen: getWeightedRandom(YEN_REWARD_WEIGHTS), cards: [] };
+            for (let i = 0; i < chest.rewards.cards; i++) {
+                let isGuaranteed = (i === 0 && chest.guaranteedRarity);
+                let reward = getRandomReward(chestType, isGuaranteed);
+                let cardCount = getWeightedRandom(CARD_COUNT_WEIGHTS);
+                const existing = rewards.cards.find(c => c.id === reward.id && c.type === reward.type);
+                if(existing) existing.count += cardCount; else rewards.cards.push({ ...reward, count: cardCount });
+            }
+            gameState.yen += rewards.yen;
+            rewards.cards.forEach(card => {
+                if(card.type === 'ability') addAbilityToCollection(card.id, card.count);
+                else if (card.type === 'stat') addStatToCollection(card.id, card.count);
+            });
+            updateCurrencyDisplay(); displayChestRewards(rewards);
+        }
+        function getRandomReward(chestType, isGuaranteed) {
+            const chest = CHESTS[chestType]; let availableIds = [];
+            Object.values(ABILITIES).forEach(a => { if (a.rarity === 'Common') availableIds.push(a.id); else for (let i = 2; i <= gameState.highestArenaReached; i++) if (ARENAS[i].unlocks.includes(a.id)) { availableIds.push(a.id); break; } });
+            let rarityPool = RARITY_PROBABILITY;
+            if(isGuaranteed) {
+                const rarityOrder = ['Common', 'Rare', 'Epic', 'Legendary', 'Mythic'];
+                const guaranteedIndex = rarityOrder.indexOf(chest.guaranteedRarity);
+                rarityPool = RARITY_PROBABILITY.filter(r => rarityOrder.indexOf(r.rarity) >= guaranteedIndex);
+            }
+            const totalWeight = rarityPool.reduce((s, r) => s + r.weight, 0); let rand = Math.random() * totalWeight; let chosenRarity;
+            for (const r of rarityPool) { if(rand < r.weight) { chosenRarity = r.rarity; break; } rand -= r.weight; }
             
-            showModal('shop-result-modal');
+            const abilitiesOfRarity = Object.values(ABILITIES).filter(a => a.rarity === chosenRarity && availableIds.includes(a.id));
+            const statsOfRarity = Object.values(STAT_CARDS).filter(s => s.rarity === chosenRarity);
+            const combinedPool = [ ...abilitiesOfRarity.map(a => ({ type: 'ability', id: a.id })), ...statsOfRarity.map(s => ({ type: 'stat', id: s.id })) ];
+
+            if(combinedPool.length === 0) { const fallback = Object.values(ABILITIES).filter(a => a.rarity === 'Common'); return { type: 'ability', id: fallback[Math.floor(Math.random() * fallback.length)].id }; }
+            return combinedPool[Math.floor(Math.random() * combinedPool.length)];
+        }
+        function displayChestRewards(rewards) {
+            const rewardsContainer = document.getElementById('shop-result-rewards'); rewardsContainer.innerHTML = '';
+            const yenEl = document.createElement('div'); yenEl.className = 'text-center bg-gray-900 p-4 rounded-lg';
+            yenEl.innerHTML = `<p class="text-4xl font-bold text-yellow-400">¥ ${rewards.yen}</p>`;
+            rewardsContainer.appendChild(yenEl);
+            const cardsContainer = document.createElement('div'); cardsContainer.className = 'flex justify-center gap-4 flex-wrap mt-4';
+            rewards.cards.forEach(card => cardsContainer.appendChild(createCardElement(card.id, 'shop', card.count)));
+            rewardsContainer.appendChild(cardsContainer); showModal('shop-result-modal');
         }
 
-
-        // --- COLLECTION LOGIC ---
         function toggleEquipAbility(abilityId) {
             const index = gameState.equippedDeck.indexOf(abilityId);
-            if (index > -1) {
-                // It's equipped, so unequip it
-                gameState.equippedDeck.splice(index, 1);
-            } else {
-                // It's not equipped, so equip it if there's space
-                if (gameState.equippedDeck.length >= 8) {
-                    alert("Deck is full! Unequip an ability first.");
-                    return;
-                }
-                // Check if the ability ID is already in the deck
-                if (gameState.equippedDeck.includes(abilityId)) {
-                    alert("You cannot equip the same ability twice.");
-                    return;
-                }
+            if (index > -1) gameState.equippedDeck.splice(index, 1);
+            else {
+                if (gameState.equippedDeck.length >= 8) { alert("Deck is full!"); return; }
+                if (gameState.equippedDeck.includes(abilityId)) { alert("Cannot equip same ability twice."); return; }
                 gameState.equippedDeck.push(abilityId);
             }
-            renderCollection(); // Re-render to show changes
+            renderCollection(); 
         }
+        function addAbilityToCollection(abilityId, count = 1) { if (gameState.ownedAbilities[abilityId]) gameState.ownedAbilities[abilityId].count += count; else gameState.ownedAbilities[abilityId] = { level: 1, count: count }; }
+        function addStatToCollection(statId, count = 1) { if (gameState.ownedStats[statId]) gameState.ownedStats[statId].count += count; else gameState.ownedStats[statId] = { level: 1, count: count }; }
+        
+        function openUpgradeModal(type, id) {
+            let owned, cardCost, yenCost, name, baseCost;
+            document.getElementById('upgrade-title').textContent = `Upgrade ${type === 'ability' ? 'Ability' : 'Stat'}`;
 
-        function addAbilityToCollection(abilityId) {
-            if (gameState.ownedAbilities[abilityId]) {
-                gameState.ownedAbilities[abilityId].count++;
-            } else {
-                gameState.ownedAbilities[abilityId] = { level: 1, count: 1 };
+            if(type === 'ability') {
+                owned = gameState.ownedAbilities[id];
+                name = getAbilityById(id).name;
+                baseCost = getAbilityById(id).baseUpgradeCostYen;
+            } else { // stat
+                owned = gameState.ownedStats[id];
+                name = STAT_CARDS[id].name;
+                baseCost = STAT_CARDS[id].baseUpgradeCostYen;
             }
-        }
 
-        function openUpgradeModal(abilityId) {
-            const owned = gameState.ownedAbilities[abilityId];
-            const cardCost = getUpgradeCardCost(owned.level);
-            const yenCost = getUpgradeYenCost(abilityId, owned.level);
+            cardCost = getUpgradeCardCost(owned.level);
+            yenCost = getUpgradeYenCost(baseCost, owned.level);
             
-            document.getElementById('upgrade-info').textContent = `Upgrade ${getAbilityById(abilityId).name} to Level ${owned.level + 1}?`;
+            document.getElementById('upgrade-info').textContent = `Upgrade ${name} to Level ${owned.level + 1}?`;
             document.getElementById('upgrade-cost').textContent = `Cost: ${cardCost} cards (You have ${owned.count}) & ${yenCost} Yen.`;
-            document.getElementById('confirm-upgrade-button').onclick = () => confirmUpgrade(abilityId);
+            document.getElementById('confirm-upgrade-button').onclick = () => confirmUpgrade(type, id);
             showModal('upgrade-modal');
         }
-        
-        function confirmUpgrade(abilityId) {
-             const owned = gameState.ownedAbilities[abilityId];
-             const cardCost = getUpgradeCardCost(owned.level);
-             const yenCost = getUpgradeYenCost(abilityId, owned.level);
-
-             if (owned.count >= cardCost && gameState.yen >= yenCost && owned.level < 15) {
-                 owned.count -= cardCost;
-                 gameState.yen -= yenCost;
-                 owned.level++;
-                 
-                 updateCurrencyDisplay();
-                 renderCollection();
-                 closeModal();
-             } else {
-                 alert("Cannot upgrade! Not enough resources.");
-             }
-        }
-
-        // --- MODAL MANAGEMENT ---
-        function showModal(modalId) {
-            document.getElementById('modal-container').classList.remove('hidden');
-            const modalContent = document.getElementById(modalId);
-            modalContent.classList.remove('hidden');
-            modalContent.classList.remove('modal-leave');
-            modalContent.classList.add('modal-enter');
-        }
-
-        function closeModal() {
-            const modalContainer = document.getElementById('modal-container');
-            const visibleModal = modalContainer.querySelector('.modal-content:not(.hidden)');
-            if (visibleModal) {
-                 visibleModal.classList.remove('modal-enter');
-                 visibleModal.classList.add('modal-leave');
-                 setTimeout(() => {
-                     visibleModal.classList.add('hidden');
-                     modalContainer.classList.add('hidden');
-                 }, 300);
+        function confirmUpgrade(type, id) {
+            let owned, baseCost;
+            if(type === 'ability') {
+                owned = gameState.ownedAbilities[id];
+                baseCost = getAbilityById(id).baseUpgradeCostYen;
+            } else {
+                owned = gameState.ownedStats[id];
+                baseCost = STAT_CARDS[id].baseUpgradeCostYen;
             }
-        }
-        
-        function showDamagePopup(targetElement, damage) {
-            const popup = document.createElement('div');
-            popup.textContent = `-${damage}`;
-            popup.className = 'damage-popup';
-            targetElement.appendChild(popup);
-            setTimeout(() => popup.remove(), 1000);
+
+            const cardCost = getUpgradeCardCost(owned.level);
+            const yenCost = getUpgradeYenCost(baseCost, owned.level);
+
+            if (owned.count >= cardCost && gameState.yen >= yenCost && owned.level < 15) {
+                 owned.count -= cardCost; gameState.yen -= yenCost; owned.level++;
+                 updateCurrencyDisplay();
+                 if(type === 'ability') renderCollection(); else renderCharacterTab();
+                 closeModal();
+            } else { alert("Not enough resources."); }
         }
 
-        // --- INITIALIZATION ---
+        function showModal(modalId) { const c = document.getElementById('modal-container'); c.classList.remove('hidden'); const m = document.getElementById(modalId); m.classList.remove('hidden'); m.classList.remove('modal-leave'); m.classList.add('modal-enter'); }
+        function closeModal() { const c = document.getElementById('modal-container'); const v = c.querySelector('.modal-content:not(.hidden)'); if (v) { v.classList.remove('modal-enter'); v.classList.add('modal-leave'); setTimeout(() => { v.classList.add('hidden'); c.classList.add('hidden'); }, 300); } }
+        function showDamagePopup(target, damage) { const p = document.createElement('div'); p.textContent = `-${damage}`; p.className = 'damage-popup'; target.appendChild(p); setTimeout(() => p.remove(), 1000); }
+
         function init() {
-            // Give player a starting set of 8 different common cards
             const startingAbilities = ['jet-punch', 'wind-scar', 'demon-slash', 'swift-kick', 'energy-blast', 'stone-fist', 'shadow-slice', 'aura-punch'];
-
-            startingAbilities.forEach(id => {
-                addAbilityToCollection(id);
-            });
-            
-            // Auto-equip a full deck to start
+            startingAbilities.forEach(id => addAbilityToCollection(id));
+            addStatToCollection('health', 1);
             gameState.equippedDeck = [...startingAbilities];
-            
-            updateCurrencyDisplay();
-            updatePlayerInfo();
-            showTab('battle');
+            updateCurrencyDisplay(); updatePlayerStatsUI(); showTab('battle');
         }
 
-        // --- RUN GAME ---
         document.addEventListener('DOMContentLoaded', init);
-
     </script>
 </body>
 </html>
