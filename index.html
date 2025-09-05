@@ -295,6 +295,16 @@
         <div id="arena-unlock-modal" class="modal-content hidden bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-md w-full">
             <h2 id="arena-unlock-title" class="text-3xl font-bold mb-4"></h2><p class="text-lg mb-2">You have unlocked new abilities!</p><div id="arena-unlock-cards" class="mb-6 flex justify-center gap-4 flex-wrap"></div><p class="text-gray-400 text-sm">Find them in the shop!</p><button onclick="closeModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg mt-4">Continue</button>
         </div>
+        <div id="arenas-modal" class="modal-content hidden bg-gray-800 p-8 rounded-lg shadow-2xl text-center max-w-3xl w-full relative">
+            <button onclick="closeModal()" class="absolute top-4 left-4 text-gray-400 hover:text-white transition z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <div id="arenas-modal-content">
+                <!-- Arena info will be rendered here by JS -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -324,10 +334,10 @@
         };
 
         const ARENAS = {
-            1: { name: "Arena 1", minPower: 0, maxPower: 499, unlocks: [] },
-            2: { name: "Arena 2", minPower: 500, maxPower: 999, unlocks: ['rasengan', 'getsuga-tensho'] },
-            3: { name: "Arena 3", minPower: 1000, maxPower: 1499, unlocks: ['black-flash', 'kamehameha'] },
-            4: { name: "Arena 4", minPower: 1500, maxPower: 2000, unlocks: ['realm-cleave'] }
+            1: { name: "Arena 1", minCrowns: 0, maxCrowns: 499, unlocks: [] },
+            2: { name: "Arena 2", minCrowns: 500, maxCrowns: 999, unlocks: ['rasengan', 'getsuga-tensho'] },
+            3: { name: "Arena 3", minCrowns: 1000, maxCrowns: 1499, unlocks: ['black-flash', 'kamehameha'] },
+            4: { name: "Arena 4", minCrowns: 1500, maxCrowns: 2000, unlocks: ['realm-cleave'] }
         };
 
         const OPPONENTS = {
@@ -359,7 +369,7 @@
         const RARITY_PROBABILITY = [ { rarity: 'Common', weight: 50 }, { rarity: 'Rare', weight: 25 }, { rarity: 'Epic', weight: 15 }, { rarity: 'Legendary', weight: 7 }, { rarity: 'Mythic', weight: 3 } ];
         
         let gameState = {
-            yen: 500, gems: 10, powerLevel: 0, highestArenaReached: 1, evolutionShards: 0,
+            yen: 500, gems: 10, crowns: 0, highestArenaReached: 1, evolutionShards: 0,
             ownedAbilities: {}, ownedStats: {}, equippedDeck: [], evolutions: {},
             passXP: 0, passLevel: 1, claimedPassRewards: [],
         };
@@ -410,8 +420,16 @@
             document.getElementById('shard-currency').textContent = gameState.evolutionShards;
         }
         function updatePlayerStatsUI() {
-            const currentArena = getArenaForPower(gameState.powerLevel);
-            document.getElementById('player-stats').innerHTML = `<span>Power Level: <span class="text-yellow-400">${gameState.powerLevel}</span></span><span class="ml-4">Arena: <span class="text-indigo-400">${currentArena.name}</span></span>`;
+            const currentArena = getArenaForCrowns(gameState.crowns);
+            document.getElementById('player-stats').innerHTML = `
+                <span>Crowns: <span class="text-yellow-400">${gameState.crowns}</span></span>
+                <span class="ml-4">Arena: <span class="text-indigo-400">${currentArena.name}</span></span>
+                <button onclick="openArenasModal()" class="ml-2 text-gray-400 hover:text-white transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            `;
         }
         
         function createCardElement(rewardId, context, count = 0, isEvolved = false) {
@@ -575,12 +593,53 @@
             container.appendChild(evoPanel);
         }
 
+        function openArenasModal() {
+            renderArenasModalContent();
+            showModal('arenas-modal');
+        }
+
+        function renderArenasModalContent() {
+            const container = document.getElementById('arenas-modal-content');
+            container.innerHTML = '<h2 class="text-3xl font-bold mb-4 text-center text-cyan-300">Arenas</h2>';
+            const arenaList = document.createElement('div');
+            arenaList.className = 'space-y-6 overflow-y-auto no-scrollbar'
+            arenaList.style.maxHeight = '70vh';
+
+            Object.values(ARENAS).forEach(arena => {
+                const arenaPanel = document.createElement('div');
+                arenaPanel.className = 'bg-gray-900 p-6 rounded-lg';
+
+                const header = document.createElement('div');
+                header.className = 'flex justify-between items-center border-b-2 border-gray-700 pb-2 mb-4';
+                header.innerHTML = `<h3 class="text-2xl font-bold text-cyan-400">${arena.name}</h3>
+                                    <span class="font-semibold text-lg text-yellow-400">${arena.minCrowns} - ${arena.maxCrowns} Crowns</span>`;
+
+                const unlocksContainer = document.createElement('div');
+                unlocksContainer.className = 'flex flex-wrap justify-center gap-4';
+
+                if (arena.unlocks.length > 0) {
+                     arena.unlocks.forEach(abilityId => {
+                        const card = createCardElement(abilityId, 'arena-preview');
+                        unlocksContainer.appendChild(card);
+                    });
+                } else {
+                    unlocksContainer.innerHTML = '<p class="text-gray-500">Starting Abilities Unlocked</p>';
+                }
+
+                arenaPanel.appendChild(header);
+                arenaPanel.appendChild(unlocksContainer);
+                arenaList.appendChild(arenaPanel);
+            });
+
+            container.appendChild(arenaList);
+        }
+
         function evolveAbility(abilityId) { const cost = 6; if(gameState.evolutionShards >= cost && !gameState.evolutions[abilityId]) { gameState.evolutionShards -= cost; gameState.evolutions[abilityId] = true; updateCurrencyDisplay(); renderEvolutionTab(); } }
         
         function startBattle() {
             if (gameState.equippedDeck.length < 8) { alert("You need 8 abilities in your deck to battle!"); return; }
             document.getElementById('main-nav').classList.add('hidden');
-            const playerArenaNum = parseInt(getArenaForPower(gameState.powerLevel).name.split(" ")[1]);
+            const playerArenaNum = parseInt(getArenaForCrowns(gameState.crowns).name.split(" ")[1]);
             const opponentData = OPPONENTS[playerArenaNum] || OPPONENTS[1];
             const healthLevel = gameState.ownedStats.health ? gameState.ownedStats.health.level : 1;
             const maxHP = 100 + (healthLevel - 1) * 50;
@@ -668,21 +727,22 @@
         }
         function endBattle(playerWon) {
             clearTimeout(battleState.turnTimerId); document.getElementById('main-nav').classList.remove('hidden'); battleState.inBattle = false;
-            let title, rewardsText; const oldPowerLevel = gameState.powerLevel;
+            let title, rewardsText; const oldCrowns = gameState.crowns;
             if (playerWon) {
-                gameState.powerLevel += 30; const passXpReward = 10; gameState.passXP += passXpReward;
+                gameState.crowns += 30; const passXpReward = 10; gameState.passXP += passXpReward;
                 const yenReward = 10 + Math.floor(Math.random() * 15); const gemReward = Math.random() < 0.1 ? 1 : 0;
                 gameState.yen += yenReward; gameState.gems += gemReward;
-                title = "You Won!"; rewardsText = `Gained: 30 Power, ${passXpReward} Pass XP, ¥${yenReward}`;
+                title = "You Won!"; rewardsText = `Gained: 30 Crowns, ${passXpReward} Pass XP, ¥${yenReward}`;
                 if (gemReward > 0) rewardsText += `, ${gemReward} Gem!`; else rewardsText += `!`;
                 checkPassLevelUp();
             } else {
-                gameState.powerLevel = Math.max(0, gameState.powerLevel - 30); title = "You Lost!"; rewardsText = "You lost 30 Power Level.";
+                gameState.crowns = Math.max(0, gameState.crowns - 30); title = "You Lost!"; rewardsText = "You lost 30 Crowns.";
             }
-            updateCurrencyDisplay(); updatePlayerStatsUI(); checkForArenaUp(oldPowerLevel, gameState.powerLevel);
+            updateCurrencyDisplay(); updatePlayerStatsUI(); checkForArenaUp(oldCrowns, gameState.crowns);
             document.getElementById('battle-result-title').textContent = title; document.getElementById('battle-result-rewards').textContent = rewardsText;
             showModal('battle-result-modal');
-            document.getElementById('battle-lobby').classList.remove('hidden'); document.getElementById('battle-arena').classList.add('hidden');
+            document.getElementById('battle-lobby').classList.remove('hidden');
+            document.getElementById('battle-arena').classList.add('hidden');
         }
         
         function playAnimation(animationType) {
@@ -712,10 +772,10 @@
             const nextCardPreview = document.getElementById('next-card-preview'); nextCardPreview.innerHTML = '';
             if (battleState.deck.length > 0) { const nextAbilityId = battleState.deck[battleState.deck.length - 1]; const isEvolved = isAbilityEvolvedInBattle(nextAbilityId); const nextCard = createCardElement(nextAbilityId, 'preview-small', 0, isEvolved); nextCardPreview.appendChild(nextCard); }
         }
-        function getArenaForPower(power) { for (let i = Object.keys(ARENAS).length; i >= 1; i--) if (power >= ARENAS[i].minPower) return ARENAS[i]; return ARENAS[1]; }
-        function checkForArenaUp(oldPower, newPower) {
-            const oldArenaNum = parseInt(getArenaForPower(oldPower).name.split(" ")[1]);
-            const newArenaData = getArenaForPower(newPower); const newArenaNum = parseInt(newArenaData.name.split(" ")[1]);
+        function getArenaForCrowns(crowns) { for (let i = Object.keys(ARENAS).length; i >= 1; i--) if (crowns >= ARENAS[i].minCrowns) return ARENAS[i]; return ARENAS[1]; }
+        function checkForArenaUp(oldCrowns, newCrowns) {
+            const oldArenaNum = parseInt(getArenaForCrowns(oldCrowns).name.split(" ")[1]);
+            const newArenaData = getArenaForCrowns(newCrowns); const newArenaNum = parseInt(newArenaData.name.split(" ")[1]);
             if (newArenaNum > gameState.highestArenaReached && newArenaNum > oldArenaNum) {
                 gameState.highestArenaReached = newArenaNum;
                 const modalTitle = document.getElementById('arena-unlock-title'); const modalCards = document.getElementById('arena-unlock-cards');
